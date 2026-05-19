@@ -28,11 +28,18 @@ mov ah, 0x00	; Set video mode
 mov al, 0x03	; 80x25 text mode, color
 int 0x10
 
+; HIDE CURSOR
+mov ah, 0x01 		; Set cursor shape function
+mov ch, 00100000b 	; Set bit 5 to 1 = disable cursor
+mov cl, 0
+int 0x10
+
 main:
 call scan	; print former row
 call pass	; update to latter row
 call copy	; fill former with latter
 call sleep
+call print_last_char ; Prints last character in line
 jmp main
 
 sleep:
@@ -97,7 +104,7 @@ cell:
 
 scan:
 	mov di, former
-	mov si, former + 80
+	mov si, former + 79 ; 79 and not 80 to emit last character just after sleep and not in this procedure.
 	.loop:
 	mov al, [di]
 	call ascii
@@ -105,6 +112,7 @@ scan:
 	inc di
 	cmp di, si
 	jb .loop
+	mov [last_char], al ; Last character stored in last_char byte variable
 	ret
 
 ascii:
@@ -117,6 +125,8 @@ ascii:
 	.done:
 	ret
 
+print_last_char:
+	mov al, [last_char] ; copying from last_char if print_last_char was called instead of emit
 emit:
 	mov ah, 0x0e	; write char in teletype mode
 	; al = char
@@ -145,6 +155,7 @@ db 0, 1, 0, 0, 0, 0, 1, 0, 0, 0
 db 0
 latter:
 times 80 db 0
+last_char db 0
 
 ; pad with zeros until magic number
 times 510 - ($ - $$) db 0
