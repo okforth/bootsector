@@ -28,6 +28,12 @@ mov ah, 0x00	; Set video mode
 mov al, 0x03	; 80x25 text mode, color
 int 0x10
 
+; HIDE CURSOR
+mov ah, 0x01 		; Set cursor shape function
+mov ch, 00100000b 	; Set bit 5 to 1 = disable cursor
+mov cl, 0
+int 0x10
+
 main:
 call scan	; print former row
 call pass	; update to latter row
